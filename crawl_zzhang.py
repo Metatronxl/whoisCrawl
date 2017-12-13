@@ -29,7 +29,7 @@ def search_ip_info(ip):
         "注册商":registrar,
         # "国家":country,
         "邮箱":email,
-        "国家":phone,
+        "联系电话":phone,
         "DNS":DNS,
         "创建日期":creation_date,
         "失效日期":expiration_date,
@@ -38,4 +38,4 @@ def search_ip_info(ip):
 
 
 if __name__ == '__main__':
-    search_ip_info('www.qq.com')
+    search_ip_info('www.meituan.com')
