@@ -47,15 +47,23 @@ def get_whois_info(url):
             # write.writerow((url,tmp["org"],tmp["address"],tmp["country"],tmp["emails"],str(tmp["creation_date"]),str(tmp["expiration_date"]),tmp["registrar"],tmp["name_servers"]))
             # write.writerow((url,'test'))
             result = dealWithWhois(tmp)
+            ipDict = {}
+            ipDict[url] = result
+            # result = url+':'+result
             print("###write success###:",result)
-            return result
+            return ipDict
     except whois.parser.PywhoisError:
         print("The Registry database contains ONLY .COM, .NET, .EDU domains and Registrars.")
 
     time.sleep(1)
 
 def mycallback(x):
-    write.writerow(x)
+    #判断是否为None
+    if x[0] == None:
+        pass
+    else:
+        print('write:',x)
+        write.writerow(list(x))
 
 def getIpList(file,amount = float("inf")):
     f = open(file,'r',encoding='utf-8')
@@ -78,8 +86,9 @@ if __name__ == '__main__':
     fp = open('geoip_mul_test.csv','w+',newline='',encoding='utf-8')
     write = csv.writer(fp)
     write.writerow(('IP','company','company_addr','country','emails','creation_date','expiration_date','registrar','dns'))
+
     #获取ip_list数量
-    ip_list = getIpList('ip_test.txt')
+    ip_list = getIpList('ip_test.txt',3)
 
 
 
@@ -97,7 +106,7 @@ if __name__ == '__main__':
     pool = Pool(processes=4)
     # pool.map(get_whois_info,ip_list)
     for temp in ip_list:
-        pool.apply_async(get_whois_info,(temp,),callback=mycallback)
+        pool.map_async(get_whois_info,(temp,),callback=mycallback)
     pool.close()
     pool.join()
     fp.close()
