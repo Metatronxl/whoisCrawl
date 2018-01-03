@@ -6,6 +6,7 @@ import csv
 
 # fp = None
 
+
 def dealWithWhois(data):
 
     company = data["org"]
@@ -43,35 +44,44 @@ def get_whois_info(url):
         elif tmp["emails"] is None:
             print(url,": None ip address")
         else:
-            # print(url,":",tmp)
-            print(url,tmp["org"],tmp["address"],tmp["country"],tmp["emails"],str(tmp["creation_date"]),str(tmp["expiration_date"]),tmp["registrar"],tmp["name_servers"])
             # write.writerow((url,tmp["org"],tmp["address"],tmp["country"],tmp["emails"],str(tmp["creation_date"]),str(tmp["expiration_date"]),tmp["registrar"],tmp["name_servers"]))
-            write.writerow((url,'test'))
+            # write.writerow((url,'test'))
             result = dealWithWhois(tmp)
             print("###write success###:",result)
-            # return result
+            return result
     except whois.parser.PywhoisError:
         print("The Registry database contains ONLY .COM, .NET, .EDU domains and Registrars.")
 
     time.sleep(1)
 
+def mycallback(x):
+    write.writerow(x)
 
-
-if __name__ == '__main__':
-
-    f = open('ip_test.txt','r',encoding='utf-8')
+def getIpList(file,amount = float("inf")):
+    f = open(file,'r',encoding='utf-8')
     ip_list = []
-
+    count =0
     # 将所有获取的ip放入list中
     ip_str = f.read()
     for tmp in ip_str.split(','):
-        ip_list.append(tmp)
+        if count <amount:
+            ip_list.append(tmp)
+            count +=1
+        else:
+            break
 
     f.close()
+    return ip_list
+
+if __name__ == '__main__':
 
     fp = open('geoip_mul_test.csv','w+',newline='',encoding='utf-8')
     write = csv.writer(fp)
     write.writerow(('IP','company','company_addr','country','emails','creation_date','expiration_date','registrar','dns'))
+    #获取ip_list数量
+    ip_list = getIpList('ip_test.txt')
+
+
 
     # for x in range(100,256,1):
     #     ip_list=[]
@@ -85,7 +95,11 @@ if __name__ == '__main__':
     #                 ip_list.append(ip)
 
     pool = Pool(processes=4)
-    pool.map(get_whois_info,ip_list)
+    # pool.map(get_whois_info,ip_list)
+    for temp in ip_list:
+        pool.apply_async(get_whois_info,(temp,),callback=mycallback)
+    pool.close()
+    pool.join()
     fp.close()
 
 
