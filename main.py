@@ -72,6 +72,7 @@ def getIpList(file,amount = float("inf")):
     # 将所有获取的ip放入list中
     ip_str = f.read()
     for tmp in ip_str.split(','):
+
         if count <amount:
             ip_list.append(tmp)
             count +=1
@@ -79,6 +80,7 @@ def getIpList(file,amount = float("inf")):
             break
 
     f.close()
+    ip_list = list(set(ip_list))
     return ip_list
 
 if __name__ == '__main__':
@@ -88,7 +90,7 @@ if __name__ == '__main__':
     write.writerow(('IP','company','company_addr','country','emails','creation_date','expiration_date','registrar','dns'))
 
     #获取ip_list数量
-    ip_list = getIpList('ip_test.txt',3)
+    ip_list = getIpList('ip_test.txt')
 
 
 

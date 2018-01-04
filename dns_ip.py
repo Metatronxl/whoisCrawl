@@ -31,8 +31,7 @@ def readFullInfoFromJson(file,amount):
 
 
 
-
-
 if __name__ == '__main__':
     # readIpFromJson('dns_ip.txt')
     readFullInfoFromJson('dns_ip.txt',5)
+
