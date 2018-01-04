@@ -89,7 +89,7 @@ if __name__ == '__main__':
     write = csv.writer(fp)
     write.writerow(('IP','company','company_addr','country','emails','creation_date','expiration_date','registrar','dns'))
 
-    #获取ip_list数量
+    #获取去除重复值后的ip_list数量,以及控制获取的数量
     ip_list = getIpList('ip_test.txt')
 
 
