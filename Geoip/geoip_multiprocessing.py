@@ -2,7 +2,10 @@
 import pygeoip
 import csv
 from multiprocessing import Pool
+import redis
 
+pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)   # host是redis主机，需要redis服务端和客户端都起着 redis默认端口是6379
+r = redis.Redis(connection_pool=pool)
 
 
 #根据GeoIP的dat文件得到国家数据
@@ -38,13 +41,12 @@ def save_data_to_csv(ip):
     res = get_record_by_addr(ip)
     res_org = get_org_by_addr(ip)
     res_isp = get_isp_by_addr(ip)
-    print(ip)
     if res != None:
         newData = {
-            "城市":res["city"],
-            "经度":res["longitude"],
-            "纬度":res["latitude"],
-            "国家":res["country_name"],
+            "city":res["city"],
+            "longitude":res["longitude"],
+            "latitude":res["latitude"],
+            "country":res["country_name"],
             "isp":res_isp,
             "org":res_org
         }
@@ -79,15 +81,25 @@ def mycallback(x):
     if x[0] == None:
         pass
     else:
-        print('write:',x)
-        write.writerow(list(x))
+        ip_str = list(x[0].keys())[0]
+        city = list(x[0].values())[0]['city']
+        longitude = list(x[0].values())[0]['longitude']
+        latitude = list(x[0].values())[0]['latitude']
+        country = list(x[0].values())[0]['country']
+        isp = list(x[0].values())[0]['isp']
+        org = list(x[0].values())[0]['org']
+
+        #
+        # print("ip:",city,country,isp,org)
+        # write.writerow(list(x))
+        r.lpush(ip_str,dict(city=city,longitude=longitude,latitude=latitude,country=country,isp=isp,org=org))
 
 
 if __name__ == '__main__':
 
-    fp = open('geoip_data.csv','w+',newline='',encoding='utf-8')
-    write = csv.writer(fp)
-    write.writerow(('IP','city','latitude','postal_code','longitude','country_name','ISP','Org'))
+    # fp = open('geoip_data.csv','w+',newline='',encoding='utf-8')
+    # write = csv.writer(fp)
+    # write.writerow(('IP','city','latitude','postal_code','longitude','country_name','ISP','Org'))
 
     # print get_record_by_addr('123.125.71.116')
     # # # get_countr_by_addr('123.125.71.116')
@@ -112,4 +124,4 @@ if __name__ == '__main__':
         pool.map_async(save_data_to_csv,(temp,),callback=mycallback)
     pool.close()
     pool.join()
-    fp.close()
+    # fp.close()

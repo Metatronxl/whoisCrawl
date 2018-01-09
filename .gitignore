@@ -23,3 +23,7 @@ Geoip/GeoIPISP.dat
 Geoip/GeoIPDomain.dat
 
 Geoip/GeoIPOrg.dat
+
+Geoip/geoip_data.csv
+
+ip_mul_test.csv

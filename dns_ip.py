@@ -27,11 +27,21 @@ def readFullInfoFromJson(file,amount):
             break
     print('read data fininsh')
 
-
+def save_toRedis(file,amount= float("inf")):
+    count=0
+    for line in open(file,'r'):
+        if count <=amount:
+            line = json.loads(line)
+            # print(type(line))
+            # print(list(line.keys()))
+            print(line)
+            count +=1
+        else:
+            break
 
 
 
 if __name__ == '__main__':
     # readIpFromJson('dns_ip.txt')
-    readFullInfoFromJson('dns_ip.txt',5)
-
+    # readFullInfoFromJson('./data/dns_ip.txt',5)
+    save_toRedis('./data/dns_ip.txt',5)
