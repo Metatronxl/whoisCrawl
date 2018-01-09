@@ -12,3 +12,15 @@ ip_test.txt
 geoip_mul_test.csv
 
 geoip_mul_test.csv
+
+Geoip/geoip.py
+
+Geoip/GeoIPCity.dat
+
+Geoip/GeoIPNetspeed.dat
+
+Geoip/GeoIPISP.dat
+
+Geoip/GeoIPDomain.dat
+
+Geoip/GeoIPOrg.dat

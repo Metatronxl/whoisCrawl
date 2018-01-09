@@ -85,7 +85,7 @@ def getIpList(file,amount = float("inf")):
 
 if __name__ == '__main__':
 
-    fp = open('geoip_mul_test.csv','w+',newline='',encoding='utf-8')
+    fp = open('ip_mul_test.csv','w+',newline='',encoding='utf-8')
     write = csv.writer(fp)
     write.writerow(('IP','company','company_addr','country','emails','creation_date','expiration_date','registrar','dns'))
 
