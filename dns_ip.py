@@ -1,5 +1,10 @@
 import json
 import time
+import redis
+
+
+pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)   # host是redis主机，需要redis服务端和客户端都起着 redis默认端口是6379
+r = redis.Redis(connection_pool=pool)
 
 def readIpFromJson(file):
     f = open('ip_test.txt','w+',encoding='utf-8')
@@ -33,8 +38,12 @@ def save_toRedis(file,amount= float("inf")):
         if count <=amount:
             line = json.loads(line)
             # print(type(line))
-            # print(list(line.keys()))
-            print(line)
+
+            ip_str = list(line.keys())[0]
+            content_dict = list(line.values())[0]
+            r.lpush(ip_str,content_dict)
+            print('write:##',ip_str,'## success!')
+            # print(line)
             count +=1
         else:
             break
@@ -44,4 +53,4 @@ def save_toRedis(file,amount= float("inf")):
 if __name__ == '__main__':
     # readIpFromJson('dns_ip.txt')
     # readFullInfoFromJson('./data/dns_ip.txt',5)
-    save_toRedis('./data/dns_ip.txt',5)
+    save_toRedis('./data/dns_ip.txt')
