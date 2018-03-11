@@ -6,7 +6,7 @@ import traceback
 MONGODB_CONFIG = {
     'host':'127.0.0.1',
     'port':27017,
-    'db_name':'whois',
+    'db_name':'whois_test',
     'username':None,
     'password':None
 }
@@ -21,7 +21,7 @@ class Singleton(object):
 
 
 
-class MongoConn(object):
+class MongoConn(Singleton):
     def __init__(self):
         try:
             self.conn = pymongo.MongoClient(MONGODB_CONFIG['host'],MONGODB_CONFIG['port'])
