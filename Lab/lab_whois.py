@@ -18,6 +18,9 @@ def readFile(file):
 
     f_in = open(file)
     count = 0
+
+    net_set = {}
+
     for file in f_in.readlines():
         file_group = file.split('\t')
         ip_str1 = file_group[0]

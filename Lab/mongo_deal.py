@@ -6,10 +6,12 @@ import traceback
 MONGODB_CONFIG = {
     'host':'127.0.0.1',
     'port':27017,
-    'db_name':'whois_test',
+    'db_name':'whois_func',
     'username':None,
     'password':None
 }
+
+count = 0
 
 
 class Singleton(object):
@@ -92,7 +94,7 @@ def upsert_mary(table, datas):
         print (traceback.format_exc())
 
 def upsert_one(table, data):
-    #更新插入，根据‘_id’更新一条记录，如果‘_id’的值不存在，则插入一条记录
+    #更新插入，根据‘ip’更新一条记录，如果‘ip’的值不存在，则插入一条记录
     try:
         my_conn = MongoConn()
         check_connected(my_conn)
@@ -102,6 +104,31 @@ def upsert_one(table, data):
         else:
             data.pop('_id') #删除'_id'键
             my_conn.db[table].update(query, {'$set': data})
+    except Exception:
+        print (traceback.format_exc())
+
+def insert_one(table,data):
+    # 将相同ip的数据放到一起
+
+
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        query = {'ip':data.get('ip','')}
+        if not my_conn.db[table].find_one(query):
+            net_set = {}
+            net_set['ip'] = data.get('ip','')
+            net_set['value'] = []
+            net_set['value'].append(data)
+            my_conn.db[table].insert(net_set)
+        else:
+            query_res = my_conn.db[table].find_one(query)
+            data_res = query_res['value']
+            if data_res == None:
+                data_res = []
+            data_res.append(data)
+            # print(data_res)
+            my_conn.db[table].update(query,{'$set': {'value':data_res}})
     except Exception:
         print (traceback.format_exc())
 
@@ -123,8 +150,55 @@ def find(table,value):
     except Exception:
         print(traceback.format_exc())
 
+##创建数据库索引
+def createIndex(table,index):
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        print(my_conn.db[table].create_index(index))
+        # print(my_conn[table].getIndexs())
+    except Exception as e:
+        print(e)
 
+### 读取并存入mongo数据库中
+def readFile(file):
 
+    f_in = open(file)
+    count = 0
+    cal_count =0
+
+    for file in f_in.readlines():
+        file_group = file.split('\t')
+        ip_str1 = file_group[0]
+        ip_str2 = file_group[1]
+        try:
+
+            company_group = file_group[2]
+            asn_description = file_group[3]
+            ## 将str类型转成list类型
+            nets = eval(file_group[4])
+
+            for net_dict in nets:
+                net_dict["ip"] = ip_str1
+                net_dict["company"] = company_group
+                net_dict['asn_description'] = asn_description
+            # print('ip_str1:',ip_str1,'\n','ip_str2:',ip_str2,'\n','company_group:',company_group,'\n','asn_des:',asn_description,'\n','nets:',nets,'\n')
+            #     net_set['ip']=ip_str1
+            #     net_set['value'] = net_dict
+                cal_count+=1
+                print('Num:',cal_count,':',net_dict)
+                # db_cursor.whois_info_all.insert(net_dict)
+                insert_one('whois_info_all',net_dict)
+        except Exception as e:
+            print(ip_str1,nets)
+            count +=1
+        # 判断是否存在ip_str1和ip_str2不同的情况
+        # if ip_str1!=ip_str2:
+        #     print("ip_str1:",ip_str1,"\n")
+        #     print("ip_str2:",ip_str2,"\n")
+
+    print("error whois info:",count)
+    f_in.close()
 
 
 
@@ -139,6 +213,8 @@ if __name__ == '__main__':
     #     print(item)
     # my_conn = MongoConn()
 
-    list = find('whois_info_all',{'ip':'54.255.229.96'})
-    for temp in list:
-        print(temp)
+
+    # list = find('whois_info_all',{'ip':'118.244.66.189'})
+    # for temp in list:
+    #     print(temp)
+    createIndex('whois_info_all','ip')
