@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # my_conn = MongoConn()
 
 
-    # list = find('whois_info_all',{'ip':'118.244.66.189'})
-    # for temp in list:
-    #     print(temp)
-    createIndex('whois_info_all','ip')
+    list = find('whois_info_all',{'ip':'118.244.66.189'})
+    for temp in list:
+        print(temp)
+    # createIndex('whois_info_all','ip')

@@ -1,7 +1,7 @@
 # coding=utf-8
 import pygeoip
 import csv
-from Lab.mongo_deal import MongoConn
+from Lab.mongo_deal import find,find_one
 import traceback
 
 
@@ -54,28 +54,22 @@ def get_netspeed_by_adr(addr):
 #                     print (res,res_org,res_isp)
 #                     write.writerow((ip,res["city"],res["latitude"],res["longitude"],res["country_name"],res_isp,res_org))
 
-def check_connected(conn):
-    #检查是否连接成功
-    if not conn.connected:
-        raise NameError + 'stat:connected Error'
 
-def find(table, value):
-    #根据条件进行查询，返回所有记录
-    try:
-        my_conn = MongoConn()
-        check_connected(my_conn)
-        return my_conn.db[table].find(value)
-    except Exception:
-        print (traceback.format_exc())
-
+#提取pymongo的whois信息和geoip的信息
 
 def updateDirection():
     try:
         F_IN = open('../Lab/new_ip_list.txt','r')
         ip_list = F_IN.readlines()
         for ip in ip_list:
+            ip = ip.strip()
             direction_data = get_record_by_addr(ip)
+            ip_set = {'ip':ip}
+            result = find_one('whois_info_all',ip_set)
+            print(result['value'])
             print(direction_data)
+            print("============")
+
     except Exception as e:
         print(e)
 
