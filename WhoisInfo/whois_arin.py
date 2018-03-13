@@ -90,8 +90,8 @@ def get_whois(url):
     # print(xml_res)
     return result
 
-def dealWithARIN_info():
-    url = '8.8.8.8'
+def dealWithARIN_info(url):
+    # url = '8.8.8.8'
     full_url ='https://whois.arin.net/rest/nets;q={}?showDetails=true&showARIN=false&showNonArinTopLevelNet=false&ext=netref2'.format(url)
     #print(full_url)
     value = get_whois(full_url)
@@ -103,7 +103,7 @@ def dealWithARIN_info():
 
 if __name__ == '__main__':
 
-    dealWithARIN_info()
+    dealWithARIN_info('8.8.8.8')
 
 
 

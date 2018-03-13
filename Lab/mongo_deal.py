@@ -6,7 +6,7 @@ import traceback
 MONGODB_CONFIG = {
     'host':'127.0.0.1',
     'port':27017,
-    'db_name':'whois_func',
+    'db_name':'whois_fun_test',
     'username':None,
     'password':None
 }
