@@ -1,7 +1,7 @@
 # coding=utf-8
 import pygeoip
 import csv
-from Lab.mongo_deal import find,find_one
+from Lab.mongo_deal import find,find_one,update_one_by_ip
 import traceback
 
 
@@ -66,12 +66,29 @@ def updateDirection():
             direction_data = get_record_by_addr(ip)
             ip_set = {'ip':ip}
             result = find_one('whois_info_all',ip_set)
-            print(result['value'])
-            print(direction_data)
-            print("============")
+            # print(result['value'])
 
-    except Exception as e:
-        print(e)
+            #如果geoip数据不存在or主数据库中不存在此ip,则跳过
+            if direction_data!=None and result != None:
+                for whois_dic in result['value']:
+                    whois_dic['latitude'] = direction_data['latitude']
+                    whois_dic['longitude'] = direction_data['longitude']
+                print(result['value'])
+                print(result)
+
+                # print(direction_data['latitude'],direction_data['longitude'])
+
+                update_one_by_ip('whois_info_all',result)
+                print("============")
+            else:
+                pass
+    except Exception:
+        print(traceback.format_exc())
+
+def get_whois_info(table,query):
+    list = find(table,query)
+    for temp in list:
+        print(temp)
 
 if __name__ == '__main__':
 
@@ -88,8 +105,6 @@ if __name__ == '__main__':
     # # get_netspeed_by_adr('123.125.71.116')
 
     # save_data_to_csv("geoip_city.csv")
-    # list = find('whois_info_all',{'ip':'118.244.66.189'})
-    # for temp in list:
-    #     print(temp)
+    # get_whois_info('whois_info_all',{'ip':'52.85.155.213'})
 
     updateDirection()

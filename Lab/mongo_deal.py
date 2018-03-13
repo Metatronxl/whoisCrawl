@@ -94,7 +94,7 @@ def upsert_mary(table, datas):
         print (traceback.format_exc())
 
 def upsert_one(table, data):
-    #更新插入，根据‘ip’更新一条记录，如果‘ip’的值不存在，则插入一条记录
+    #更新插入，根据‘_id’更新一条记录，如果‘_id’的值不存在，则插入一条记录
     try:
         my_conn = MongoConn()
         check_connected(my_conn)
@@ -106,6 +106,22 @@ def upsert_one(table, data):
             my_conn.db[table].update(query, {'$set': data})
     except Exception:
         print (traceback.format_exc())
+
+def update_one_by_ip(table,data):
+    #用于补充主whois数据库的信息
+    #更新插入,根据IP更新一条记录,如果ip不存在,则跳过
+
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        query = {'ip':data.get('ip','')}
+        if not my_conn.db[table].find_one(query):
+            pass
+        else:
+            my_conn.db[table].update(query,{'$set':{'value':data['value']}})
+    except Exception as e:
+        print(e)
+
 
 def insert_one(table,data):
     # 将相同ip的数据放到一起
