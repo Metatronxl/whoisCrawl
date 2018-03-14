@@ -13,10 +13,7 @@ def cidr_extract(netblocks):
         cidrlength = netblock.cidrlength.text
         startaddress = netblock.startaddress.text
         cidr = '{}/{}'.format(startaddress,cidrlength)
-        # print(netblock)
-        # print(cidr)
         cidr_list.append(cidr)
-    # print(cidr_list)
     return cidr_list
 
 def netType_extract(netblocks):
@@ -28,7 +25,6 @@ def netType_extract(netblocks):
 
 def net_range_extracrt(netblocks):
     net_range =''
-    # list = '118.0.0.0 - 118.255.255.255'
     for netblock in netblocks:
         start_addr = netblock.startaddress.text
         end_addr = netblock.endaddress.text
@@ -95,7 +91,6 @@ def get_whois(url):
 def dealWithARIN_info(url):
     # url = '8.8.8.8'
     full_url ='https://whois.arin.net/rest/nets;q={}?showDetails=true&showARIN=false&showNonArinTopLevelNet=false&ext=netref2'.format(url)
-    #print(full_url)
     value = get_whois(full_url)
     full_whois = {}
     full_whois['ip']=url
@@ -130,6 +125,9 @@ def whoisDic_update(ARIN_dic,whois_dic):
             judge_flag = True
         return judge_flag,whois_dic
 
+
+## 使用ARIN API更新whois数据库
+
 def updateWhoisDB(url):
 
     # url = '118.244.66.189'
@@ -144,12 +142,9 @@ def updateWhoisDB(url):
             ARIN_value = ARIN_info['value']
             ## 当ip在数据库不存在时直接将查询更新至数据库
             if result == None:
-                print(ARIN_info)
-                insert('whois_info_all',ARIN_info)
-                print("======")
-            else:
 
-                print(result['value'])
+                insert('whois_info_all',ARIN_info)
+            else:
                 result_value = result['value']
                 ## 匹配数据库的操作
 
@@ -163,24 +158,17 @@ def updateWhoisDB(url):
                             match_flag = True
                             judge_flag,update_item = whoisDic_update(arin_item,result_item) ##judge_flag为False则不用更新
                             if judge_flag != False:
-                                # result_item = update_item
                                 update_part_date('whois_info_all',result)
 
                     if match_flag == True:
                         ## 数据更新
-                        print(result_value)
-                        print(ARIN_value)
                         match_flag = False ## 重新置为False
 
                     elif match_flag == False:
                         ## 插入新数据
 
-                        print(result_value)
-                        print(ARIN_value)
                         add_part_date('whois_info_all',result,arin_item)
-                        print(result_value)
-
-                # print(ARIN_info)
+        print("ARIN update finsihed\n")
     except Exception as e:
 
         print(traceback.format_exc())
@@ -190,7 +178,7 @@ def updateWhoisDB(url):
 if __name__ == '__main__':
 
     # dealWithARIN_info('8.8.8.8')
-    updateWhoisDB('118.244.66.189')
+    updateWhoisDB('8.8.8.8')
 
     # print(date_cmp('2017-01-17','2018-02-13'))
 
