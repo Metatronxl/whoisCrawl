@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import datetime
 import time
 import traceback
-from Lab.mongo_deal import  find_one,insert,update_part_date
+from Lab.mongo_deal import  find_one,insert,add_part_date,update_part_date
 from Tool.date_tool import  date_cmp
 
 def cidr_extract(netblocks):
@@ -76,7 +76,7 @@ def dealWithXML(document):
         whois_dic['name'] = name
         whois_dic['cidr'] = cidr
         whois_dic['net_type'] = netType
-        whois_dic['compangy'] = organization
+        whois_dic['company'] = organization
         whois_dic['version'] = version
 
         net_list.append(whois_dic)
@@ -104,8 +104,31 @@ def dealWithARIN_info(url):
     # print(full_whois)
     return full_whois
 
+def whoisDic_update(ARIN_dic,whois_dic):
+    ARIN_date = ARIN_dic['updated']
+    whois_date = whois_dic['updated']
 
-
+    judge_flag = date_cmp(ARIN_date,whois_date)
+    if judge_flag == False:
+        return judge_flag,whois_dic
+    else:
+        if whois_dic['created'] == ARIN_dic['created'] and \
+           whois_dic['range'] == ARIN_dic['range'] and \
+           whois_dic['handle'] == ARIN_dic['handle'] and \
+           whois_dic['net_type'] == ARIN_dic['net_type'] and \
+           whois_dic['company'] == ARIN_dic['company'] and \
+           whois_dic['version'] ==  ARIN_dic['version']:
+            judge_flag = False
+        else:
+        #更新whois数据库的数据
+            whois_dic['created'] = ARIN_dic['created']
+            whois_dic['range'] = ARIN_dic['range']
+            whois_dic['handle'] = ARIN_dic['handle']
+            whois_dic['net_type'] = ARIN_dic['net_type']
+            whois_dic['company'] = ARIN_dic['company']
+            whois_dic['version'] = ARIN_dic['version']
+            judge_flag = True
+        return judge_flag,whois_dic
 
 def updateWhoisDB(url):
 
@@ -138,6 +161,11 @@ def updateWhoisDB(url):
                         result_cidr = result_item['cidr']
                         if arin_cidr == result_cidr:
                             match_flag = True
+                            judge_flag,update_item = whoisDic_update(arin_item,result_item) ##judge_flag为False则不用更新
+                            if judge_flag != False:
+                                # result_item = update_item
+                                update_part_date('whois_info_all',result)
+
                     if match_flag == True:
                         ## 数据更新
                         print(result_value)
@@ -149,7 +177,7 @@ def updateWhoisDB(url):
 
                         print(result_value)
                         print(ARIN_value)
-                        update_part_date('whois_info_all',result,arin_item)
+                        add_part_date('whois_info_all',result,arin_item)
                         print(result_value)
 
                 # print(ARIN_info)

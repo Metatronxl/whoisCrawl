@@ -122,8 +122,24 @@ def update_one_by_ip(table,data):
     except Exception as e:
         print(e)
 
+def update_part_date(table,data):
+    # 更新数据库中过时的数据
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        query = {'ip':data.get('ip','')}
+        query_res = my_conn.db[table].find_one(query)
+        data_res = query_res['value']
+        if data_res == None:
+            data_res = []
+        # data_res.append(update_data)
+        new_data = data['value']
+        my_conn.db[table].update(query,{'$set':{'value':new_data}})
+    except Exception:
+        print(traceback.format_exc())
 
-def update_part_date(table,data,update_data):
+def add_part_date(table,data,update_data):
+    # 给数据的value添加新的数据
     try:
         my_conn = MongoConn()
         check_connected(my_conn)
