@@ -123,6 +123,20 @@ def update_one_by_ip(table,data):
         print(e)
 
 
+def update_part_date(table,data,update_data):
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        query = {'ip':data.get('ip','')}
+        query_res = my_conn.db[table].find_one(query)
+        data_res = query_res['value']
+        if data_res == None:
+            data_res = []
+        data_res.append(update_data)
+        my_conn.db[table].update(query,{'$set':{'value':data_res}})
+    except Exception:
+        print(traceback.format_exc())
+
 def insert_one(table,data):
     # 将相同ip的数据放到一起
 
@@ -233,4 +247,6 @@ if __name__ == '__main__':
     list = find('whois_info_all',{'ip':'118.244.66.189'})
     for temp in list:
         print(temp)
+
     # createIndex('whois_info_all','ip')
+

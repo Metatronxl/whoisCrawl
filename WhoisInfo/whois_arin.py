@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import time
+import traceback
+from Lab.mongo_deal import  find_one,insert,update_part_date
+from Tool.date_tool import  date_cmp
 
 def cidr_extract(netblocks):
     cidr_list = []
@@ -54,7 +57,7 @@ def dealWithXML(document):
 
     for net in nets:
         # print(net.prettify())
-        print('=============================================')
+        # print('=============================================')
         created = net.registrationdate.text
         updated = net.updatedate.text
         handle = net.handle.text
@@ -76,7 +79,6 @@ def dealWithXML(document):
         whois_dic['compangy'] = organization
         whois_dic['version'] = version
 
-        print(whois_dic)
         net_list.append(whois_dic)
 
     return net_list
@@ -99,11 +101,69 @@ def dealWithARIN_info(url):
     full_whois['ip']=url
     full_whois['value']= value
 
-    print(full_whois)
+    # print(full_whois)
+    return full_whois
+
+
+
+
+def updateWhoisDB(url):
+
+    # url = '118.244.66.189'
+    ip_dict = {'ip':url}
+    try:
+        result = find_one('whois_info_all',ip_dict)
+        ARIN_info = dealWithARIN_info(url)
+        ##ARIN_info不存在,则直接pass,不更新数据库
+        if ARIN_info == None:
+            pass
+        else:
+            ARIN_value = ARIN_info['value']
+            ## 当ip在数据库不存在时直接将查询更新至数据库
+            if result == None:
+                print(ARIN_info)
+                insert('whois_info_all',ARIN_info)
+                print("======")
+            else:
+
+                print(result['value'])
+                result_value = result['value']
+                ## 匹配数据库的操作
+
+                ##匹配数据库中的cidr,如果不存在,则直接更新一条数据库,存在则更新数据库信息
+                match_flag = False #如果匹配到了设置为True
+                for arin_item in ARIN_value:
+                    for result_item in result_value:
+                        arin_cidr = arin_item['cidr']
+                        result_cidr = result_item['cidr']
+                        if arin_cidr == result_cidr:
+                            match_flag = True
+                    if match_flag == True:
+                        ## 数据更新
+                        print(result_value)
+                        print(ARIN_value)
+                        match_flag = False ## 重新置为False
+
+                    elif match_flag == False:
+                        ## 插入新数据
+
+                        print(result_value)
+                        print(ARIN_value)
+                        update_part_date('whois_info_all',result,arin_item)
+                        print(result_value)
+
+                # print(ARIN_info)
+    except Exception as e:
+
+        print(traceback.format_exc())
+
+
 
 if __name__ == '__main__':
 
-    dealWithARIN_info('8.8.8.8')
+    # dealWithARIN_info('8.8.8.8')
+    updateWhoisDB('118.244.66.189')
 
+    # print(date_cmp('2017-01-17','2018-02-13'))
 
 
