@@ -98,7 +98,7 @@ if __name__ == '__main__':
     '''
 
 
-    # print get_record_by_addr('123.125.71.116')
+    print get_record_by_addr('123.125.71.116')
     # # # get_countr_by_addr('123.125.71.116')
     # print get_org_by_addr('123.125.71.116')
     # print get_isp_by_addr('123.125.71.116')

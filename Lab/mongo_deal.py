@@ -2,6 +2,8 @@ import pymongo
 import sys
 import traceback
 
+from Tool.date_tool import date_cmp
+
 
 MONGODB_CONFIG = {
     'host':'127.0.0.1',
@@ -196,6 +198,149 @@ def find(table,value):
     except Exception:
         print(traceback.format_exc())
 
+## 更新value信息大于一条的
+def deal_repeat_info(table):
+    try:
+        my_conn = MongoConn()
+        check_connected(my_conn)
+        collectionList = my_conn.db[table].find()
+        for collection in collectionList:
+            value = collection['value']
+            print(len(value))
+            if len(value) >= 2 :
+                print(collection)
+                only_whois = MergeWhoisInfo(value)
+
+
+                if isinstance(only_whois,list):
+                    collection['value'] = only_whois
+                else:
+                    value_result = []
+                    value_result.append(only_whois)
+                    collection['value'] = value_result
+                update_part_date('whois_info_all',collection)
+                print("update success")
+    except Exception:
+        print(traceback.format_exc())
+
+
+## 将ip的多条whois信息合并为一条 (写的超级乱。。。)
+
+def MergeWhoisInfo(whois_list):
+
+
+    ##判断list里面的cidr是否相同
+    def compareCIDR(cidr_list):
+        first_cidr = cidr_list[0]
+        for item in cidr_list:
+            if first_cidr != item:
+                return False
+        return True
+    ## 处理不规范的date
+    def formalDate(old_date):
+        if old_date.find('-') == -1:
+            tmp_date = old_date[:4]+'-'+old_date[4:6]+'-'+old_date[6:]
+            old_date = tmp_date
+        return old_date
+    ## 处理不规范的cidr
+    def formalCIDR(cidr_str):
+        if cidr_str.find(','):
+            cidr_list = cidr_str.split(',')
+            max_cidr = 0
+            for item in cidr_list:
+                cidr_len = item.split('/')[1]
+                print(cidr_len)
+                if int(cidr_len) > max_cidr:
+                    max_cidr = int(cidr_len)
+
+            final_cidr = ''
+            for item in cidr_list:
+                cidr_len = item.split('/')[1]
+                if int(cidr_len) == max_cidr:
+                    final_cidr = item
+            return final_cidr
+        return cidr_str
+
+
+
+    ## 根据日期来选出最新日期的whois信息
+    def updateWhoisByDate(whois_list):
+        whois_date = []
+        for item_whois in whois_list:
+            updated_date = item_whois['updated']
+            if updated_date == None: ##去掉updated 为None的情况
+                continue
+            updated_date = formalDate(updated_date)
+            item_date = updated_date[:10]
+            whois_date.append(item_date)
+        if len(whois_date) == 0:
+            return None
+        else:
+            update_date = whois_date[0]
+            for date_item in whois_date:
+                if date_cmp(date_item,update_date):
+                    update_date = date_item
+            return update_date
+
+
+    cidr_list = []
+
+    for whois_item in whois_list:
+        final_cidr = formalCIDR(whois_item['cidr'])
+        print(final_cidr)
+        cidr_list.append(final_cidr)
+    result = compareCIDR(cidr_list)
+
+    ## cidr不同,找出cidr最接近的值
+    if result == False:
+        fix_cidr = 0
+        final_item = []
+        for whois_item in whois_list:
+            item_cidr = formalCIDR(whois_item['cidr'])
+            print(item_cidr)
+            cidr_len = int(item_cidr.split('/')[1])
+            if cidr_len > fix_cidr:
+                fix_cidr = cidr_len
+        # 把最大cidr的whois加入列表
+        for whois_item in whois_list:
+            item_cidr = formalCIDR(whois_item['cidr'])
+            cidr_len = int(item_cidr.split('/')[1])
+            if cidr_len == fix_cidr:
+                final_item.append(whois_item)
+
+        ##筛选出日期最新的whois信息,如果有多个,则选取第一个
+        if len(final_item) >1:
+            date_final_item = []
+            latest_date = updateWhoisByDate(final_item)
+            for whois_item in final_item:
+                if whois_item['updated'] == None:
+                    continue
+                item_date = formalDate(whois_item['updated'])[:10]
+                if item_date == latest_date:
+                    date_final_item.append(whois_item)
+            if len(date_final_item) == 0:
+                return final_item[0]
+            else:
+                return date_final_item[0]
+        ##cidr相同的whois信息只有一个,则直接输出
+        else:
+            return final_item
+
+    ### cidr 全部相同
+    else:
+        date_final_item = []
+        latest_date = updateWhoisByDate(whois_list)
+        for whois_item in whois_list:
+            if whois_item['updated'] == None:
+                continue
+            item_date = formalDate(whois_item['updated'])[:10]
+            if item_date == latest_date:
+                date_final_item.append(whois_item)
+        if len(date_final_item) == 0: ## 均不存在updated数据
+            return whois_list[0]
+        else:
+            return date_final_item[0]
+
 ##创建数据库索引
 def createIndex(table,index):
     try:
@@ -260,9 +405,11 @@ if __name__ == '__main__':
     # my_conn = MongoConn()
 
 
-    list = find('whois_info_all',{'ip':'118.244.66.189'})
-    for temp in list:
-        print(temp)
+    # list = find('whois_info_all',{'ip':'118.244.66.189'})
+    # for temp in list:
+    #     print(temp)
 
     # createIndex('whois_info_all','ip')
+
+    deal_repeat_info('whois_info_all')
 
